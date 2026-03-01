@@ -40,8 +40,8 @@ export default function SubscriptionsPage() {
                     const counts: Record<string, number> = {};
                     await Promise.all(
                         data.map(async (sub) => {
-                            const count = await getSubscriberCount(sub.channel_id);
-                            counts[sub.channel_id] = count;
+                            const channelId = sub.channel_id!;
+                            counts[channelId] = await getSubscriberCount(channelId);
                         })
                     );
                     setSubscriberCounts(counts);
@@ -53,7 +53,7 @@ export default function SubscriptionsPage() {
             }
         };
 
-        fetchSubscriptions();
+        void fetchSubscriptions();
     }, [user]);
 
     const formatSubscriberCount = (count: number) => {
