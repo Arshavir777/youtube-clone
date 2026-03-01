@@ -53,7 +53,7 @@ export default function ProfilePage() {
     if (!profile) return <div>Loading...</div>
 
     return (
-        <div className="max-w-dvw mx-auto p-6">
+        <div className="max-w-dvw mx-auto">
             <h1 className="text-2xl font-bold mb-4">My Profile</h1>
 
             <div className="flex items-center gap-4 mb-6">

@@ -18,6 +18,9 @@ interface AuthContextType {
     signOut: () => Promise<void>
 }
 
+type TimeoutId = ReturnType<typeof setTimeout>;
+
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({children}: { children: ReactNode }) {
@@ -28,17 +31,33 @@ export function AuthProvider({children}: { children: ReactNode }) {
 
     useEffect(() => {
         let mounted = true
+        let loadingTimeout: TimeoutId | null = null
+
+        // Safety timeout - ensure the loading state clears even if something fails
+        loadingTimeout = setTimeout(() => {
+            if (mounted && loading) {
+                console.warn("Auth loading timeout - forcing loading to false")
+                setLoading(false)
+            }
+        }, 10000) // 10-second timeout
 
         const fetchSession = async () => {
             try {
-                const {data} = await supabase.auth.getSession()
+                const {data, error} = await supabase.auth.getSession()
+
+                if (error) {
+                    console.error("Session fetch error:", error)
+                    // Clear a potentially corrupted auth state
+                    await supabase.auth.signOut()
+                    throw error
+                }
 
                 if (!mounted) return
 
                 setSession(data.session)
                 setUser(data.session?.user ?? null)
 
-                // Fetch profile if user exists
+                // Fetch a profile if the user exists
                 if (data.session?.user) {
                     try {
                         const userProfile = await getProfile(data.session.user.id)
@@ -48,7 +67,7 @@ export function AuthProvider({children}: { children: ReactNode }) {
                     } catch (error) {
                         console.error("Error fetching profile:", error)
 
-                        // If profile doesn't exist (OAuth user), create it
+                        // If a profile doesn't exist (OAuth user), create it
                         if (data.session.user.email) {
                             try {
                                 await createUserProfileAndChannel(data.session.user.id, data.session.user.email)
@@ -75,14 +94,23 @@ export function AuthProvider({children}: { children: ReactNode }) {
                 }
             } catch (error) {
                 console.error("Error fetching session:", error)
+                // Even on error, clear session and profile
+                if (mounted) {
+                    setSession(null)
+                    setUser(null)
+                    setProfile(null)
+                }
             } finally {
                 if (mounted) {
                     setLoading(false)
+                    if (loadingTimeout) {
+                        clearTimeout(loadingTimeout)
+                    }
                 }
             }
         }
 
-        fetchSession()
+        void fetchSession()
 
         const {
             data: {subscription},
@@ -98,6 +126,7 @@ export function AuthProvider({children}: { children: ReactNode }) {
                     const userProfile = await getProfile(session.user.id)
                     if (mounted) {
                         setProfile(userProfile)
+                        setLoading(false)
                     }
                 } catch (error) {
                     console.error("Error fetching profile:", error)
@@ -109,28 +138,35 @@ export function AuthProvider({children}: { children: ReactNode }) {
                             const newProfile = await getProfile(session.user.id)
                             if (mounted) {
                                 setProfile(newProfile)
+                                setLoading(false)
                             }
                         } catch (createError) {
                             console.error("Error creating profile:", createError)
                             if (mounted) {
                                 setProfile(null)
+                                setLoading(false)
                             }
                         }
                     } else {
                         if (mounted) {
                             setProfile(null)
+                            setLoading(false)
                         }
                     }
                 }
             } else {
                 if (mounted) {
                     setProfile(null)
+                    setLoading(false)
                 }
             }
         })
 
         return () => {
             mounted = false
+            if (loadingTimeout) {
+                clearTimeout(loadingTimeout)
+            }
             subscription.unsubscribe()
         }
     }, [])

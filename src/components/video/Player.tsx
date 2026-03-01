@@ -1,6 +1,12 @@
 import {useEffect, useRef} from 'react';
 import type {Video} from '../../types';
 import 'cloudinary-video-player/cld-video-player.min.css';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import 'cloudinary-video-player/adaptive-streaming';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import 'cloudinary-video-player/dash';
 import type {VideoPlayer} from "cloudinary-video-player";
 
 interface Props {
@@ -8,61 +14,93 @@ interface Props {
 }
 
 export default function Player({video}: Props) {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const playerRef = useRef<VideoPlayer>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const playerRef = useRef<VideoPlayer | null>(null);
 
     useEffect(() => {
+        let mounted = true;
+
         const initPlayer = async () => {
-            if (!videoRef.current || playerRef.current) return;
+            if (!containerRef.current) return;
 
-            // Dynamically import Cloudinary Video Player
-            const cloudinary = await import('cloudinary-video-player');
+            // Clean up existing player first
+            if (playerRef.current) {
+                try {
+                    playerRef.current.dispose();
+                } catch (error) {
+                    console.error('Error disposing player:', error);
+                }
+                playerRef.current = null;
+            }
 
-            // Extract public_id from Cloudinary URL
-            const publicId = video.public_id
+            // Remove the old video element completely
+            containerRef.current.innerHTML = '';
 
-            if (!publicId) {
-                console.error('Could not extract public_id from video URL');
+            // Create a fresh video element
+            const videoElement = document.createElement('video');
+            videoElement.className = 'cld-video-player w-full';
+            videoElement.controls = true;
+            videoElement.id = 'video-player';
+            containerRef.current.appendChild(videoElement);
+
+            if (!video.public_id) {
+                console.error('Missing public_id for video');
                 return;
             }
 
-            const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+            if (!mounted) return;
 
-            // Initialize Cloudinary Video Player
-            playerRef.current = cloudinary.videoPlayer('#vidoe-player', {
-                cloud_name: cloudName,
-                publicId: publicId,
-                fluid: true,
-                controls: true,
-                sourceTypes: ['hls', 'dash', 'mp4'],
-                transformation: {
-                    streaming_profile: 'hd',
-                },
-                playbackRates: [0.75, 1, 1.25],
-                autoplay: false,
-                muted: false,
-            });
+            try {
+                // Dynamically import Cloudinary Video Player
+                const cloudinary = await import('cloudinary-video-player');
+
+                if (!mounted) return;
+
+                const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
+                // Initialize Cloudinary Video Player with BTS (Bitmovin Technology Stack)
+                playerRef.current = cloudinary.videoPlayer(videoElement.id, {
+                    cloud_name: cloudName,
+                    publicId: video.public_id,
+                    fluid: true,
+                    controls: true,
+                    sourceTypes: ['hls', 'dash', 'mp4'],
+                    transformation: {
+                        streaming_profile: 'hd',
+                    },
+                    playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 2],
+                    autoplay: false,
+                    muted: false,
+                    qualitySelector: true,
+                    hlsConfig: {
+                        enableWorker: true
+                    }
+                });
+            } catch (error) {
+                console.error('Error initializing player:', error);
+            }
         };
 
         void initPlayer();
 
         // Cleanup
         return () => {
+            mounted = false;
             if (playerRef.current) {
-                playerRef.current.dispose?.();
+                try {
+                    playerRef.current.dispose();
+                } catch (error) {
+                    console.error('Error disposing player:', error);
+                }
                 playerRef.current = null;
             }
         };
-    }, [video.video_url, video.public_id]);
+    }, [video.public_id]);
 
     return (
-        <div className="w-full rounded-xl overflow-hidden bg-black">
-            <video
-                ref={videoRef}
-                id='vidoe-player'
-                className="cld-video-player w-full"
-                controls
-            />
-        </div>
+        <div
+            ref={containerRef}
+            className="w-full rounded-xl overflow-hidden bg-black"
+        />
     );
 }

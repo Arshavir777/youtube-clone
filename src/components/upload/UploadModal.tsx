@@ -18,42 +18,71 @@ export default function UploadModal({isOpen, onClose, channel}: Props) {
     const [description, setDescription] = useState("")
     const [file, setFile] = useState<File | null>(null)
     const [loading, setLoading] = useState(false)
+    const [uploadProgress, setUploadProgress] = useState(0)
     const [error, setError] = useState("")
 
     if (!isOpen) return null
 
     const handleOnDrop = (files: File[]) => {
         setFile(files[0])
+        setError("")
     }
 
     const handleUpload = async () => {
         setError('')
-        if (!file || !user) {
-            setError('Upload File')
+        setUploadProgress(0)
+
+        if (!file) {
+            setError('Please select a video file')
+            return
+        }
+
+        if (!user) {
+            setError('You must be logged in to upload')
+            return
+        }
+
+        if (!title.trim()) {
+            setError('Please enter a video title')
             return
         }
 
         setLoading(true)
 
-        const cloudData = await uploadVideo(file)
+        try {
+            const cloudData = await uploadVideo(file, {
+                onProgress: (progress) => {
+                    setUploadProgress(progress)
+                }
+            })
 
-        if (!cloudData) {
+            if (!cloudData) {
+                throw new Error('Upload failed - no data returned')
+            }
+
+            const {error: dbError} = await supabase.from("videos").insert({
+                user_id: user.id,
+                title,
+                description,
+                channel_id: channel.id,
+                public_id: cloudData.publicId,
+                thumbnail_url: cloudData.thumbnail,
+                video_url: cloudData.url,
+            })
+
+            if (dbError) {
+                throw new Error(`Database error: ${dbError.message}`)
+            }
+
             setLoading(false)
-            return
+            setUploadProgress(0)
+            onClose()
+        } catch (err) {
+            console.error('Upload error:', err)
+            setError(err instanceof Error ? err.message : 'Upload failed. Please try again.')
+            setLoading(false)
+            setUploadProgress(0)
         }
-
-        await supabase.from("videos").insert({
-            user_id: user.id,
-            title,
-            description,
-            channel_id: channel.id,
-            public_id: cloudData.publicId,
-            thumbnail_url: cloudData.thumbnail,
-            video_url: cloudData.url,
-        })
-
-        setLoading(false)
-        onClose()
     }
 
     return (
@@ -76,30 +105,52 @@ export default function UploadModal({isOpen, onClose, channel}: Props) {
                 <textarea placeholder='Description' className="w-full p-3 bg-zinc-800 rounded" onChange={(e) => setDescription(e.target.value)}
                 />
 
-                <div className='mb-3 '>
-                    {file && 'Uploaded: ' + file.name}
+                <div className='mb-3'>
+                    {file && (
+                        <div className="text-sm text-zinc-400">
+                            Selected: <span className="text-white">{file.name}</span>
+                        </div>
+                    )}
                 </div>
 
-                <div className='mt-2 text-red-400'>
-                    {error && error}
-                </div>
+                {loading && uploadProgress > 0 && (
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-zinc-400">Uploading...</span>
+                            <span className="text-white font-semibold">{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full bg-zinc-700 rounded-full h-2.5">
+                            <div
+                                className="bg-red-600 h-2.5 rounded-full transition-all duration-300"
+                                style={{width: `${uploadProgress}%`}}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {error && (
+                    <div className='p-3 bg-red-900/30 border border-red-500 rounded text-red-400 text-sm'>
+                        {error}
+                    </div>
+                )}
 
                 <VideoUploadDropzone onDrop={handleOnDrop}/>
 
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-zinc-700 rounded cursor-pointer"
+                        disabled={loading}
+                        className="px-4 py-2 bg-zinc-700 rounded hover:bg-zinc-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
 
                     <button
                         onClick={handleUpload}
-                        disabled={loading}
-                        className="px-4 py-2 bg-red-600 rounded cursor-pointer"
+                        disabled={loading || !file || !title.trim()}
+                        className="px-4 py-2 bg-red-600 rounded hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? "Uploading..." : "Upload"}
+                        {loading ? `Uploading... ${uploadProgress}%` : "Upload"}
                     </button>
                 </div>
             </div>

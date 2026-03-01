@@ -53,7 +53,7 @@ export default function WatchPage() {
     // Fetch and track video views
     useEffect(() => {
         const handleVideoView = async () => {
-            if (!video?.id) return
+            if (!video?.id || !user?.id) return
 
             try {
                 // Get the current view count
@@ -105,12 +105,12 @@ export default function WatchPage() {
         }
     }
 
-    if (loading) return <Loader size={'lg'} />
+    if (loading) return <Loader />
     if (error) return error
     if (!video) return
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 max-w-450 mx-auto px-4 lg:px-0">
+        <div className="flex flex-col lg:flex-row gap-6 max-w-450 mx-auto lg:px-0">
             <div className="flex-1 lg:max-w-5xl">
                 <Player video={video} />
 

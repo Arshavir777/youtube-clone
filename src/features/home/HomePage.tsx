@@ -17,7 +17,7 @@ export default function HomePage() {
         }
     }, [videos, fetchViewCounts])
 
-    if (loading) return <Loader fullScreen={true} />
+    if (loading) return <Loader />
 
     if (error) return error
 

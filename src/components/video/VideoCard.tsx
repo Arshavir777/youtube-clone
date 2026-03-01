@@ -2,6 +2,7 @@ import {Link} from "react-router-dom"
 import {useState} from "react"
 import type {Video} from "../../types";
 import {useViewCount} from "../../context/ViewCountContext";
+import {formatViewCount} from "../../utils";
 
 interface Props {
     video: Video
@@ -35,14 +36,6 @@ export default function VideoCard({video}: Props) {
         setShowMenu(false);
     };
 
-    const formatViewCount = (count: number) => {
-        if (count >= 1000000) {
-            return `${(count / 1000000).toFixed(1)}M`;
-        } else if (count >= 1000) {
-            return `${(count / 1000).toFixed(1)}K`;
-        }
-        return count.toString();
-    };
 
     const getTimeAgo = (dateString: string) => {
         const date = new Date(dateString);
@@ -73,6 +66,7 @@ export default function VideoCard({video}: Props) {
                 <div className="relative">
                     <img
                         src={video.thumbnail_url!}
+                        alt={video.title}
                         className="rounded-xl w-full aspect-video object-cover"
                     />
                     <span className="absolute bottom-2 right-2 bg-black px-2 py-1 text-xs rounded">

@@ -8,7 +8,7 @@ export default function MainLayout() {
             <Navbar/>
             <div className="flex h-[calc(100%-64px)]">
                 <Sidebar/>
-                <main className="flex-1 overflow-y-auto p-6">
+                <main className="flex-1 overflow-y-auto p-3">
                     <Outlet/>
                 </main>
             </div>
