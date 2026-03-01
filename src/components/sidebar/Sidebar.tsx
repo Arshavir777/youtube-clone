@@ -26,8 +26,8 @@ export default function Sidebar() {
             >
                 <nav className="flex flex-col p-4 gap-2">
                     <SidebarItem icon={<Home size={20}/>} label="Home" path="/"/>
-                    <SidebarItem icon={<User size={20}/>} label="Subscriptions" path="/"/>
-                    <SidebarItem icon={<History size={20}/>} label="History" path="/"/>
+                    <SidebarItem icon={<User size={20}/>} label="Subscriptions" path="/subscriptions"/>
+                    <SidebarItem icon={<History size={20}/>} label="History" path="/history"/>
                 </nav>
             </aside>
         </>

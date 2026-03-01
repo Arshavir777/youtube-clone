@@ -3,6 +3,7 @@ import {supabase} from "../../lib/supabase"
 import VideoUploadDropzone from "../ui/VideoUploadDropzone.tsx";
 import {useAuth} from "../../hooks/useAuth.tsx";
 import type {Channel} from "../../types";
+import {uploadVideo} from "../../lib/cloudinary.ts";
 
 interface Props {
     isOpen: boolean
@@ -34,29 +35,21 @@ export default function UploadModal({isOpen, onClose, channel}: Props) {
 
         setLoading(true)
 
-        const filePath = `${user.id}/${Date.now()}-${file.name}`
+        const cloudData = await uploadVideo(file)
 
-        const {error: uploadError} = await supabase.storage
-            .from("videos")
-            .upload(filePath, file)
-
-        if (uploadError) {
-            console.error({uploadError})
+        if (!cloudData) {
             setLoading(false)
             return
         }
-
-        const {data: publicUrl} = supabase.storage
-            .from("videos")
-            .getPublicUrl(filePath)
 
         await supabase.from("videos").insert({
             user_id: user.id,
             title,
             description,
             channel_id: channel.id,
-            thumbnail_url: 'sdfsd',
-            video_url: publicUrl.publicUrl,
+            public_id: cloudData.publicId,
+            thumbnail_url: cloudData.thumbnail,
+            video_url: cloudData.url,
         })
 
         setLoading(false)

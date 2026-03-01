@@ -2,7 +2,7 @@ import {useEffect, useState} from "react"
 import type {Video} from "../types";
 import {getAllVideos, getVideoById} from "../api/video.ts";
 
-export const useVideos = (filter: Partial<Video>) => {
+export const useVideos = (filter: Partial<Video> = {}) => {
     const [videos, setVideos] = useState<Video[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -11,8 +11,10 @@ export const useVideos = (filter: Partial<Video>) => {
         const fetch = async () => {
             try {
                 const data = await getAllVideos(filter)
+                console.log('fetched videos', data)
                 setVideos(data)
             } catch (err: unknown) {
+                console.log('error fetching videos', err)
                 if (err instanceof Error) {
                     setError(err.message)
                 } else {
@@ -23,7 +25,7 @@ export const useVideos = (filter: Partial<Video>) => {
             }
         }
         void fetch()
-    }, [filter])
+    }, [JSON.stringify(filter)])
 
     return {videos, loading, error}
 }

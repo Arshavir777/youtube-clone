@@ -1,19 +1,19 @@
-import {StrictMode} from 'react'
 import {createRoot} from 'react-dom/client'
 import {BrowserRouter} from "react-router-dom"
 import {AuthProvider} from "./context/AuthContext.tsx";
 import {UIProvider} from "./context/UIContext.tsx";
+import {ViewCountProvider} from "./context/ViewCountContext.tsx";
 import App from './App.tsx'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <BrowserRouter>
-            <UIProvider>
-                <AuthProvider>
+    <BrowserRouter>
+        <UIProvider>
+            <AuthProvider>
+                <ViewCountProvider>
                     <App/>
-                </AuthProvider>
-            </UIProvider>
-        </BrowserRouter>
-    </StrictMode>,
+                </ViewCountProvider>
+            </AuthProvider>
+        </UIProvider>
+    </BrowserRouter>,
 )

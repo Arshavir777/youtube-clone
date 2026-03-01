@@ -1,6 +1,7 @@
 import {useState} from "react"
 import {Link, useNavigate} from "react-router-dom"
 import {signIn} from "../../api/auth.ts";
+import GoogleSignInButton from "../../components/auth/GoogleSignInButton";
 
 export default function LoginPage() {
     const navigate = useNavigate()
@@ -58,8 +59,19 @@ export default function LoginPage() {
                         {loading ? "Logging..." : "Login"}
                     </button>
 
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-zinc-700"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-zinc-900 text-zinc-400">Or continue with</span>
+                        </div>
+                    </div>
+
+                    <GoogleSignInButton text="Sign in with Google" />
+
                     <p className="text-sm text-zinc-400">
-                        No account? <Link to="/register">Register</Link>
+                        No account? <Link to="/register" className="text-white hover:underline">Register</Link>
                     </p>
                 </form>
             </div>

@@ -191,6 +191,7 @@ export type Database = {
           description: string | null
           duration: number | null
           id: string
+          public_id: string | null
           thumbnail_url: string | null
           title: string
           user_id: string | null
@@ -202,6 +203,7 @@ export type Database = {
           description?: string | null
           duration?: number | null
           id?: string
+          public_id?: string | null
           thumbnail_url?: string | null
           title: string
           user_id?: string | null
@@ -213,6 +215,7 @@ export type Database = {
           description?: string | null
           duration?: number | null
           id?: string
+          public_id?: string | null
           thumbnail_url?: string | null
           title?: string
           user_id?: string | null

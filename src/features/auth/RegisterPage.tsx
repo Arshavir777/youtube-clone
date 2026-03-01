@@ -1,12 +1,13 @@
 import {useState} from "react"
 import {Link, useNavigate} from "react-router-dom"
 import {signUp} from "../../api/auth.ts";
+import GoogleSignInButton from "../../components/auth/GoogleSignInButton";
 
 export default function RegisterPage() {
     const navigate = useNavigate()
-    const [email, setEmail] = useState("arshogharibyan@gmail.com")
-    const [username, setUsername] = useState("arshavir777")
-    const [password, setPassword] = useState("youtubeclone2026")
+    const [email, setEmail] = useState("")
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
@@ -65,8 +66,19 @@ export default function RegisterPage() {
                     {loading ? 'Registration...' : 'Register'}
                 </button>
 
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-zinc-700"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-zinc-900 text-zinc-400">Or continue with</span>
+                    </div>
+                </div>
+
+                <GoogleSignInButton text="Sign up with Google" />
+
                 <p className="text-sm text-zinc-400">
-                    Already have account? <Link to="/login">Login</Link>
+                    Already have account? <Link to="/login" className="text-white hover:underline">Login</Link>
                 </p>
             </form>
         </div>

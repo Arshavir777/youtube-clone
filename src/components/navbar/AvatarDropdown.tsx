@@ -7,7 +7,7 @@ export default function AvatarDropdown() {
     const [open, setOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
     const navigate = useNavigate()
-    const {signOut } = useAuth()
+    const {signOut, profile} = useAuth()
 
     const handleLogout = async () => {
         await signOut()
@@ -35,15 +35,30 @@ export default function AvatarDropdown() {
             {/* Avatar Button */}
             <button
                 onClick={() => setOpen((prev) => !prev)}
-                className="w-9 h-9 rounded-full bg-red-600 cursor-pointer flex items-center justify-center font-semibold"
+                className="w-9 h-9 rounded-full bg-red-600 cursor-pointer flex items-center justify-center font-semibold overflow-hidden"
             >
-                <User size={18} />
+                {profile?.avatar_url ? (
+                    <img
+                        src={profile.avatar_url}
+                        alt={profile.username || 'User'}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <User size={18} />
+                )}
             </button>
 
             {/* Dropdown */}
             {open && (
                 <div
-                    className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100">
+                    className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-lg shadow-lg overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100">
+                    {profile && (
+                        <div className="px-4 py-3 border-b border-zinc-800">
+                            <p className="font-semibold text-sm">{profile.username}</p>
+                            <p className="text-xs text-zinc-400 truncate">{profile.id}</p>
+                        </div>
+                    )}
+
                     <button
                         onClick={() => {
                             navigate("/profile")

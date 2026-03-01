@@ -6,7 +6,9 @@ import MainLayout from "./layouts/MainLayout.tsx";
 import WatchPage from "./features/watch/WatchPage.tsx";
 import HomePage from "./features/home/HomePage.tsx";
 import ChannelPage from "./features/channels/ChannelPage.tsx";
+import EditChannelPage from "./features/channels/EditChannelPage.tsx";
 import ProfilePage from "./features/profile/ProfilePage.tsx";
+import SubscriptionsPage from "./features/subscriptions/SubscriptionsPage.tsx";
 import NotFoundPage from "./features/system/NotFoundPage.tsx";
 
 export default function App() {
@@ -22,6 +24,7 @@ export default function App() {
                 <Route path="/" element={<HomePage/>}/>
                 <Route path="/watch/:id" element={<WatchPage/>}/>
                 <Route path="/channel/:id" element={<ChannelPage/>}/>
+                <Route path="/subscriptions" element={<SubscriptionsPage/>}/>
             </Route>
 
             <Route
@@ -32,6 +35,7 @@ export default function App() {
                 }
             >
                 <Route path="/profile" element={<ProfilePage/>}/>
+                <Route path="/channel/:id/edit" element={<EditChannelPage/>}/>
             </Route>
 
             <Route path="*" element={<NotFoundPage/>}/>
